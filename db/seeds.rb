@@ -14,8 +14,16 @@ puts "Loading PostgreSQL Data dump into local database with command:"
 puts cmd
 system(cmd)
 
-Coupon.create!(code: "SAVE20", discount_percentage: 20, expiration_date: Date.new(2024, 12, 31), merchant_id: 6)
-Coupon.create!(code: "OFF30", discount_percentage: 30, expiration_date: Date.new(2024, 11, 30), merchant_id: 5)
+system("rails db:migrate")
 
-Coupon.create!(code: "DISCOUNT15", discount_percentage: 15, expiration_date: Date.new(2025, 01, 15), merchant_id: 4)
-Coupon.create!(code: "40DEAL", discount_percentage: 40, expiration_date: Date.new(2024, 10, 15), merchant_id: 4)
+Coupon.create!(code: "SAVE10", discount_percentage: 10, expiration_date: Date.new(2024, 12, 31), merchant_id: 4)
+Coupon.create!(code: "SAVE20", discount_percentage: 20, expiration_date: Date.new(2024, 12, 31), merchant_id: 5)
+Coupon.create!(code: "OFF30", discount_percentage: 30, expiration_date: Date.new(2024, 11, 30), merchant_id: 6)
+Coupon.create!(code: "DISCOUNT15", discount_percentage: 15, expiration_date: Date.new(2025, 01, 15), merchant_id: 7)
+Coupon.create!(code: "40DEAL", discount_percentage: 40, expiration_date: Date.new(2024, 10, 15), merchant_id: 8)
+
+Invoice.create(customer_id: 1, merchant_id: 4, status:"returned", coupon_id:1)
+Invoice.create(customer_id: 10, merchant_id: 4, status:"shipped", coupon_id:1)
+Invoice.create(customer_id: 20, merchant_id: 5, status:"shipped", coupon_id:3)
+Invoice.create(customer_id: 30, merchant_id: 6, status:"shipped", coupon_id:4)
+Invoice.create(customer_id: 40, merchant_id: 7, status:"shipped", coupon_id:5)
