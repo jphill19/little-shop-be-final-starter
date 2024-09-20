@@ -16,11 +16,11 @@ system(cmd)
 
 system("rails db:migrate")
 
-Coupon.create!(code: "SAVE10", discount_percentage: 10, expiration_date: Date.new(2024, 12, 31), merchant_id: 4)
-Coupon.create!(code: "SAVE20", discount_percentage: 20, expiration_date: Date.new(2024, 12, 31), merchant_id: 5)
-Coupon.create!(code: "OFF30", discount_percentage: 30, expiration_date: Date.new(2024, 11, 30), merchant_id: 6)
-Coupon.create!(code: "DISCOUNT15", discount_percentage: 15, expiration_date: Date.new(2025, 01, 15), merchant_id: 7)
-Coupon.create!(code: "40DEAL", discount_percentage: 40, expiration_date: Date.new(2024, 10, 15), merchant_id: 8)
+Coupon.create!(code: "SAVE10", discount: 10, expiration_date: Date.new(2024, 12, 31), merchant_id: 4, active: true, percentage:true)
+Coupon.create!(code: "SAVE20", discount: 20, expiration_date: Date.new(2024, 12, 31), merchant_id: 5, active: true, percentage:false)
+Coupon.create!(code: "OFF30", discount: 30, expiration_date: Date.new(2024, 11, 30), merchant_id: 6, active: true, percentage:true)
+Coupon.create!(code: "DISCOUNT15", discount: 15, expiration_date: Date.new(2025, 01, 15), merchant_id: 7, active: true, percentage:false)
+Coupon.create!(code: "40DEAL", discount: 40, expiration_date: Date.new(2024, 10, 15), merchant_id: 8, active: true, percentage:true)
 
 Invoice.create(customer_id: 1, merchant_id: 4, status:"returned", coupon_id:1)
 Invoice.create(customer_id: 10, merchant_id: 4, status:"shipped", coupon_id:1)

@@ -16,8 +16,10 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_19_220449) do
 
   create_table "coupons", force: :cascade do |t|
     t.string "code"
-    t.integer "discount_percentage"
+    t.integer "discount"
+    t.boolean "percentage"
     t.date "expiration_date"
+    t.boolean "active"
     t.bigint "merchant_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
