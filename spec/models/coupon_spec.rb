@@ -7,6 +7,8 @@ describe Coupon, type: :model do
   end
 
   describe 'validations' do
+    it { should validate_presence_of(:merchant) }
+
     it { should validate_presence_of(:code) }
     it { should validate_uniqueness_of(:code)}
 
@@ -15,10 +17,8 @@ describe Coupon, type: :model do
 
     it { should validate_presence_of(:expiration_date) }
 
-    #it { should validate_inclusion_of(:percentage).in_array([true, false]) } => Current errors with shoulda matchers validation test
     it { should_not allow_value(nil).for(:percentage) }
 
-    # it { should validate_inclusion_of(:active).in_array([true, false]) }  => Current errors with shoulda matchers validation test
     it { should_not allow_value(nil).for(:active) }
   end
 
@@ -113,6 +113,40 @@ describe Coupon, type: :model do
       invoice_2 = Invoice.create(customer: customer, merchant: merchant, status:"shipped", coupon: coupon)
 
       expect(coupon.invoice_count).to eq(2)
+    end
+  end
+
+  describe "merchant_coupon_limits" do
+    before(:each) do
+      @merchant = Merchant.create(name: "Test")
+      @coupon_1 = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
+      @coupon_2 = Coupon.create(code: "SAVE20", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
+      @coupon_3 = Coupon.create(code: "SAVE30", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
+      @coupon_4 = Coupon.create(code: "SAVE40", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
+      @coupon_5 = Coupon.create(code: "SAVE50", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
+    end
+
+    it "a merchant can't have more than 5 active coupons" do
+      new_coupon = Coupon.new(code: "SAVE60", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
+
+      expect(new_coupon.valid?).to be(false)
+      expect(new_coupon.errors[:limit]).to include('Merchant cannot have more than 5 active coupons.')
+    end
+
+    it "a merchant can have more than 5 coupons as long as they're inactive" do
+      new_coupon = Coupon.create(code: "SAVE70", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: false, percentage: true)
+
+      expect(new_coupon.valid?).to be(true)
+      expect(Coupon.count).to eq(6)
+    end
+
+    it "does not allow a coupon to be changed to active it exceeds the limit" do
+      new_coupon = Coupon.create(code: "SAVE70", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: false, percentage: true)
+
+      new_coupon.active = true
+
+      expect(new_coupon.valid?).to be(false)
+      expect(new_coupon.errors[:limit]).to include('Merchant cannot have more than 5 active coupons.')
     end
   end
 end
