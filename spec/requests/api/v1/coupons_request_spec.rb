@@ -5,15 +5,7 @@ describe "Merchant endpoints", :type => :request do
     before(:each) do
       @merchant = Merchant.create(name: "Test")
       @customer = Customer.create(first_name: "John", last_name: "Hill")
-      @coupon = Coupon.create(
-        code: "SAVE10", 
-        discount: 10, 
-        expiration_date: Date.tomorrow, 
-        merchant: @merchant, 
-        active: true, 
-        percentage: true
-      )
-  
+      @coupon = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant,  active: true,  percentage: true)
       @invoice_1 = Invoice.create(customer: @customer, merchant: @merchant, status: "returned", coupon: @coupon)
       @invoice_2 = Invoice.create(customer: @customer, merchant: @merchant, status: "shipped", coupon: @coupon)
     end
