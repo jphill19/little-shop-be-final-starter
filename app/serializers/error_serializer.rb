@@ -23,4 +23,14 @@ class ErrorSerializer
     ]
     {errors: error_data}
   end
+
+  def self.json_errors_for_invalid_request(errors)
+    error_data = errors.map do | message|
+      {
+        status: 422,
+        message: message
+      }
+    end
+    {errors: error_data}
+  end
 end
