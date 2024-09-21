@@ -1,6 +1,9 @@
 require "rails_helper"
 
 describe "Merchant endpoints", :type => :request do
+  before(:each) do
+    Merchant.destroy_all
+  end
   describe "Get all merchants" do
     it "should return a properly array of merchants" do
       create_list(:merchant, 5)
