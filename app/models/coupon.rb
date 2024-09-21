@@ -11,6 +11,11 @@ class Coupon < ApplicationRecord
   validates :percentage, inclusion: [true, false]
   validates :percentage, exclusion: [nil]
 
+
+  def invoice_count
+    self.invoices.count
+  end
+
   private
 
   def expiration_date_past_due

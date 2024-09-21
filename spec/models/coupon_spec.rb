@@ -102,4 +102,17 @@ describe Coupon, type: :model do
       expect(coupon.errors[:active]).to include("is not included in the list")
     end
   end
+
+  describe "invoice_count" do
+    it "returns a count of all invoices associated with a coupon" do
+      merchant = Merchant.create(name: "Test")
+      customer = Customer.create(first_name: "John", last_name: "Hill")
+      coupon = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.tomorrow, merchant: merchant, active: true, percentage: true)
+
+      invoice_1 = Invoice.create(customer: customer, merchant: merchant, status:"returned", coupon: coupon)
+      invoice_2 = Invoice.create(customer: customer, merchant: merchant, status:"shipped", coupon: coupon)
+
+      expect(coupon.invoice_count).to eq(2)
+    end
+  end
 end

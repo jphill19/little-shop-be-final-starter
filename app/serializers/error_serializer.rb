@@ -12,4 +12,15 @@ class ErrorSerializer
       errors: ["invalid search params"] 
     }
   end
+
+  #Johns Methods:
+  def self.json_errors_for_not_found(error)
+    error_data = [
+      {
+        status: 404,
+        message: error
+      }
+    ]
+    {errors: error_data}
+  end
 end
