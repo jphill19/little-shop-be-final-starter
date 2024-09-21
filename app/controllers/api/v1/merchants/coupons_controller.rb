@@ -9,13 +9,23 @@ class Api::V1::Merchants::CouponsController < ApplicationController
     render json: CouponSerializer.new(coupons)
   end
 
-  private 
-
-  def error_request_not_found(exception)
-    render json: ErrorSerializer.json_errors_for_not_found(exception), status: :not_found
+  def create
+    merchant = Merchant.find(params[:merchant_id])
+    coupon = merchant.coupons.create!(coupon_params)
+    render json: CouponSerializer.new(coupon), status: :created
   end
 
-  def error_invalid_request(exception)
-    render json: ErrorSerializer.json_errors(exception.record.errors), status: :unprocessable_entity
+  private 
+
+  def coupon_params
+    params.require(:coupon).permit(:code, :discount, :expiration_date, :active, :percentage)
+  end
+
+  def error_request_not_found(error)
+    render json: ErrorSerializer.json_errors_for_not_found(error), status: :not_found
+  end
+
+  def error_invalid_request(errors)
+    render json: ErrorSerializer.json_errors_for_invalid_request(errors.record.errors.full_messages), status: :unprocessable_entity
   end
 end

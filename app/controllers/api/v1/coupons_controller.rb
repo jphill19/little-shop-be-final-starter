@@ -9,11 +9,12 @@ class Api::V1::CouponsController < ApplicationController
 
   private 
 
-  def error_request_not_found(exception)
-    render json: ErrorSerializer.json_errors_for_not_found(exception), status: :not_found
+
+  def error_request_not_found(error)
+    render json: ErrorSerializer.json_errors_for_not_found(error), status: :not_found
   end
 
-  def error_invalid_request(exception)
-    render json: ErrorSerializer.json_errors(exception.record.errors), status: :unprocessable_entity
+  def error_invalid_request(errors)
+    render json: ErrorSerializer.json_errors_for_invalid_request(errors.record.errors.full_messages), status: :unprocessable_entity
   end
 end
