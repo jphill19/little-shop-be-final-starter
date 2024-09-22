@@ -29,12 +29,15 @@ describe Coupon, type: :model do
 
   describe "expiration_date validation" do
     before(:each) do
+      Merchant.destroy_all
+      Coupon.destroy_all
+      Invoice.destroy_all
       @merchant = Merchant.create(name: "Test")
     end
 
     it 'does not create a coupon if expiration_date is in the past' do
       coupon = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.today.prev_month, merchant: @merchant, active: true, percentage:true)
-      
+
       expect(coupon.valid?).to be(false)
       expect(coupon.errors[:expiration_date]).to include("Coupon is past due")
       expect(Coupon.count).to eq(0)
@@ -58,6 +61,9 @@ describe Coupon, type: :model do
 
   describe "percentage validation" do
     before(:each) do
+      Merchant.destroy_all
+      Coupon.destroy_all
+      Invoice.destroy_all
       @merchant = Merchant.create(name: "Test")
     end
 
@@ -84,6 +90,9 @@ describe Coupon, type: :model do
 
   describe "active validation" do
     before(:each) do
+      Merchant.destroy_all
+      Coupon.destroy_all
+      Invoice.destroy_all
       @merchant = Merchant.create(name: "Test")
     end
   
@@ -123,6 +132,9 @@ describe Coupon, type: :model do
 
   describe "merchant_coupon_limits" do
     before(:each) do
+      Merchant.destroy_all
+      Coupon.destroy_all
+      Invoice.destroy_all
       @merchant = Merchant.create(name: "Test")
       @coupon_1 = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
       @coupon_2 = Coupon.create(code: "SAVE20", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
@@ -157,6 +169,9 @@ describe Coupon, type: :model do
 
   describe "packaged_invoices" do
     before(:each) do
+      Merchant.destroy_all
+      Coupon.destroy_all
+      Invoice.destroy_all
       @merchant = Merchant.create(name: "Test")
       @customer = Customer.create(first_name: "John", last_name: "Hill")
       @coupon_1 = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
@@ -170,6 +185,42 @@ describe Coupon, type: :model do
 
     it "will return false if a coupon doesn't have packaged invoice"do
       expect(@coupon_1.packaged_invoices?).to be(false)
+    end
+  end
+
+  describe "sort" do
+    before(:each) do
+      Merchant.destroy_all
+      Coupon.destroy_all
+      Invoice.destroy_all
+      @merchant = Merchant.create(name: "Test")
+      @coupon_1 = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
+      @coupon_2 = Coupon.create(code: "SAVE15", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: false, percentage: true)
+      @coupon_3 = Coupon.create(code: "SAVE20", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
+    end
+
+    describe "coupons_sorted_active_false" do
+      it "can return all coupons sorted by active = false" do
+        coupons_sorted = Coupon.coupons_sorted_active_false("false")
+        expect(coupons_sorted).to eq([@coupon_2, @coupon_1, @coupon_3])
+      end
+
+      it "will return all if no active != false" do
+        coupons_sorted = Coupon.coupons_sorted_active_false("true")
+        expect(coupons_sorted).to eq([@coupon_1, @coupon_2, @coupon_3])
+      end
+    end
+
+    describe "coupons_sorted_active_true" do
+      it "can return all coupons sorted by active = true" do
+        coupons_sorted = Coupon.coupons_sorted_active_true("true")
+        expect(coupons_sorted).to eq([@coupon_1, @coupon_3, @coupon_2])
+      end
+
+      it "will return all if no active != true" do
+        coupons_sorted = Coupon.coupons_sorted_active_true("false")
+        expect(coupons_sorted).to eq([@coupon_1, @coupon_2, @coupon_3])
+      end
     end
   end
 end

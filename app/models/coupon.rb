@@ -14,6 +14,16 @@ class Coupon < ApplicationRecord
   validate :merchant_coupon_limits
   validate :expiration_date_past_due
 
+  def self.coupons_sorted_active_true(sort)
+    return all unless sort == "true"
+    order(active: :desc)
+  end
+
+  def self.coupons_sorted_active_false(sort)
+    return all unless sort == "false"
+    order(active: :asc)
+  end
+
   def invoice_count
     self.invoices.count
   end
@@ -21,6 +31,7 @@ class Coupon < ApplicationRecord
   def packaged_invoices?
     self.invoices.where(status: "packaged").any?
   end
+
   private
 
   def expiration_date_past_due
