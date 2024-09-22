@@ -5,7 +5,7 @@ describe Coupon, type: :model do
     Merchant.destroy_all
     Coupon.destroy_all
   end
-  
+
   describe 'relationships' do
     it { should belong_to :merchant }
     it { should have_many(:invoices) }

@@ -57,7 +57,6 @@ describe "Merchant endpoints", :type => :request do
       patch "/api/v1/coupons/#{@coupon_1.id}/deactivate"
       json = JSON.parse(response.body, symbolize_names: true)
 
-      expect(response). to have_http_status(:ok)
       expect(response).to have_http_status(:ok)
       expect(json[:data]).to include(:id, :type, :attributes)
       expect(json[:data][:id]).to eq("#{@coupon_1.id}")
@@ -81,6 +80,50 @@ describe "Merchant endpoints", :type => :request do
 
     it "can handle sad paths where the id doesn't exsist" do
       patch "/api/v1/coupons/dog/deactivate"
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to have_http_status(:not_found)
+      expect(json).to include(:errors)
+      expect(json[:errors][0][:status]).to eq(404)
+      expect(json[:errors][0][:message]).to eq("Couldn't find Coupon with 'id'=dog")
+    end
+  end
+
+  describe "activate" do
+    it "can activate a coupon" do
+      deactivate_coupon = Coupon.create(code: "BIGDEAL10", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant,  active: false,  percentage: true)
+      patch "/api/v1/coupons/#{deactivate_coupon.id}/activate"
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to have_http_status(:ok)
+      expect(json[:data]).to include(:id, :type, :attributes)
+      expect(json[:data][:id]).to eq("#{deactivate_coupon.id}")
+      expect(json[:data][:type]).to eq("coupon")
+      expect(json[:data][:attributes][:code]).to eq(deactivate_coupon.code)
+      expect(json[:data][:attributes][:discount]).to eq(deactivate_coupon.discount)
+      expect(json[:data][:attributes][:expiration_date]).to eq(deactivate_coupon.expiration_date.to_s)
+      expect(json[:data][:attributes][:active]).to eq(true)
+      expect(json[:data][:attributes][:percentage]).to eq(deactivate_coupon.percentage)
+    end
+
+    it "can activate a coupon if it exceeds the limit of 5 coupons active per merchant" do
+      coupon_3 = Coupon.create(code: "SAVE30", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant,  active: true,  percentage: true)
+      coupon_4 = Coupon.create(code: "SAVE40", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant,  active: true,  percentage: true)
+      coupon_5 = Coupon.create(code: "SAVE50", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant,  active: true,  percentage: true)
+
+      deactivate_coupon = Coupon.create(code: "BIGDEAL10", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant,  active: false,  percentage: true)
+      patch "/api/v1/coupons/#{deactivate_coupon.id}/activate"
+      json = JSON.parse(response.body, symbolize_names: true)
+
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json).to include(:errors)
+      expect(json[:errors][0][:status]).to eq(422)
+      expect(json[:errors][0][:message]).to eq("Limit Merchant cannot have more than 5 active coupons.")
+    end
+
+    it "can handle sad paths where the id doesn't exsist" do
+      patch "/api/v1/coupons/dog/activate"
       json = JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to have_http_status(:not_found)

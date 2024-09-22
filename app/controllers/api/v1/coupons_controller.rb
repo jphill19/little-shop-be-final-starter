@@ -17,6 +17,12 @@ class Api::V1::CouponsController < ApplicationController
     render json: CouponSerializer.new(coupon)
   end
 
+  def activate
+    coupon = Coupon.find(params[:coupon_id])
+    coupon.update!(active: true)
+    render json: CouponSerializer.new(coupon)
+  end
+
   private 
 
   def error_request_not_found(error)

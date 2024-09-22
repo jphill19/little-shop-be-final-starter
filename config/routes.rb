@@ -28,6 +28,7 @@ Rails.application.routes.draw do
       end
       resources :coupons,  only: [:show] do
         patch '/deactivate', to: 'coupons#deactivate'
+        patch '/activate', to: 'coupons#activate'
       end
     end
   end
