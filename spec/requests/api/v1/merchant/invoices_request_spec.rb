@@ -8,9 +8,11 @@ RSpec.describe "Merchant invoices endpoints" do
     @customer1 = create(:customer)
     @customer2 = create(:customer)
 
+    @coupon_1 = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant,  active: true,  percentage: true)
+
     @invoice1 = Invoice.create!(customer: @customer1, merchant: @merchant1, status: "packaged")
     create_list(:invoice, 3, merchant_id: @merchant1.id, customer_id: @customer1.id) # shipped by default
-    @invoice2 = Invoice.create!(customer: @customer1, merchant: @merchant2, status: "shipped")
+    @invoice2 = Invoice.create!(customer: @customer1, merchant: @merchant2, status: "shipped", coupon: @coupon_1)
   end
 
   it "should return all invoices for a given merchant based on status param" do
@@ -55,5 +57,20 @@ RSpec.describe "Merchant invoices endpoints" do
     expect(json[:message]).to eq("Your query could not be completed")
     expect(json[:errors]).to be_a Array
     expect(json[:errors].first).to eq("Couldn't find Merchant with 'id'=100000")
+  end
+
+  it "will add coupon id attribute if a coupon is present in the invoice" do
+    get "/api/v1/merchants/#{@merchant2.id}/invoices"
+
+    json = JSON.parse(response.body, symbolize_names: true)
+
+    expect(response).to be_successful
+    expect(json[:data].count).to eq(1)
+    expect(json[:data][0][:id]).to eq(@invoice2.id.to_s)
+    expect(json[:data][0][:type]).to eq("invoice")
+    expect(json[:data][0][:attributes][:customer_id]).to eq(@customer1.id)
+    expect(json[:data][0][:attributes][:merchant_id]).to eq(@merchant2.id)
+    expect(json[:data][0][:attributes][:coupon_id]).to eq(@coupon_1.id)
+    expect(json[:data][0][:attributes][:status]).to eq("shipped")
   end
 end
