@@ -1,6 +1,11 @@
 require 'rails_helper'
 
 describe Merchant, type: :model do
+  before(:each) do
+    Merchant.destroy_all
+    Coupon.destroy_all
+  end
+
   describe 'validations' do
     it { should validate_presence_of(:name)}
   end
@@ -17,7 +22,7 @@ describe Merchant, type: :model do
       merchant1 = create(:merchant, created_at: 1.day.ago)
       merchant2 = create(:merchant, created_at: 4.days.ago)
       merchant3 = create(:merchant, created_at: 2.days.ago)
-
+      
       expect(Merchant.sorted_by_creation).to eq([merchant1, merchant3, merchant2])
     end
 

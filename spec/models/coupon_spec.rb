@@ -1,6 +1,11 @@
 require 'rails_helper'
 
 describe Coupon, type: :model do
+  before(:each) do
+    Merchant.destroy_all
+    Coupon.destroy_all
+  end
+  
   describe 'relationships' do
     it { should belong_to :merchant }
     it { should have_many(:invoices) }
@@ -28,7 +33,7 @@ describe Coupon, type: :model do
     end
 
     it 'does not create a coupon if expiration_date is in the past' do
-      coupon = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.yesterday, merchant: @merchant, active: true, percentage:true)
+      coupon = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.today.prev_month, merchant: @merchant, active: true, percentage:true)
       
       expect(coupon.valid?).to be(false)
       expect(coupon.errors[:expiration_date]).to include("Coupon is past due")

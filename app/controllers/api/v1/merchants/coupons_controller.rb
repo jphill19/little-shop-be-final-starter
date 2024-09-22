@@ -22,7 +22,7 @@ class Api::V1::Merchants::CouponsController < ApplicationController
   end
 
   def error_request_not_found(error)
-    render json: ErrorSerializer.json_errors_for_not_found(error), status: :not_found
+    render json: ErrorSerializer.json_singe_error(error, 404), status: :not_found
   end
 
   def error_invalid_request(errors)

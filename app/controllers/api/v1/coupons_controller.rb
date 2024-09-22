@@ -9,12 +9,18 @@ class Api::V1::CouponsController < ApplicationController
 
   def deactivate
     coupon = Coupon.find(params[:coupon_id])
+    if coupon.packaged_invoices?
+      message = "Cannot Process Request. Coupon is attached to a packaged Invoice"
+      return render json: ErrorSerializer.json_singe_error(message, 422), status: :unprocessable_entity
+    end
+    coupon.update!(active: false)
+    render json: CouponSerializer.new(coupon)
   end
 
   private 
 
   def error_request_not_found(error)
-    render json: ErrorSerializer.json_errors_for_not_found(error), status: :not_found
+    render json: ErrorSerializer.json_singe_error(error, 404), status: :not_found
   end
 
   def error_invalid_request(errors)
