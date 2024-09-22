@@ -7,8 +7,11 @@ class Api::V1::CouponsController < ApplicationController
     render json: CouponSerializer.new(coupon, params:{invoice_count: true })
   end
 
-  private 
+  def deactivate
+    coupon = Coupon.find(params[:coupon_id])
+  end
 
+  private 
 
   def error_request_not_found(error)
     render json: ErrorSerializer.json_errors_for_not_found(error), status: :not_found

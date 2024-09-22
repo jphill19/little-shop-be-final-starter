@@ -13,11 +13,13 @@ class Coupon < ApplicationRecord
   validates :percentage, inclusion: [true, false]
   validates :percentage, exclusion: [nil]
 
-
   def invoice_count
     self.invoices.count
   end
 
+  def packaged_invoices?
+    self.invoices.where(status: "packaged").any?
+  end
   private
 
   def expiration_date_past_due
@@ -31,4 +33,5 @@ class Coupon < ApplicationRecord
       errors.add(:limit, "Merchant cannot have more than 5 active coupons.")
     end
   end
+
 end
