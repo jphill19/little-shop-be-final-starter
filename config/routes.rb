@@ -26,8 +26,10 @@ Rails.application.routes.draw do
         resources :invoices, only: :index, controller: "merchants/invoices"
         resources :coupons, only: [:index,:create], controller: "merchants/coupons"
       end
-      resources :coupons,  except: [:new, :edit, :update, :index] 
-      patch 'coupons/:id', to: 'coupons#update'
+      resources :coupons,  only: [:show] do
+        patch '/deactivate', to: 'coupons#deactivate'
+        patch '/activate', to: 'coupons#activate'
+      end
     end
   end
 end

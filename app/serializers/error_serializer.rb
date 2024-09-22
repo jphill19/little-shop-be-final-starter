@@ -14,10 +14,10 @@ class ErrorSerializer
   end
 
   #Johns Methods:
-  def self.json_errors_for_not_found(error)
+  def self.json_singe_error(error, status)
     error_data = [
       {
-        status: 404,
+        status: status,
         message: error
       }
     ]

@@ -1,6 +1,11 @@
 require 'rails_helper'
 
 describe Coupon, type: :model do
+  before(:each) do
+    Merchant.destroy_all
+    Coupon.destroy_all
+  end
+
   describe 'relationships' do
     it { should belong_to :merchant }
     it { should have_many(:invoices) }
@@ -28,7 +33,7 @@ describe Coupon, type: :model do
     end
 
     it 'does not create a coupon if expiration_date is in the past' do
-      coupon = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.yesterday, merchant: @merchant, active: true, percentage:true)
+      coupon = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.today.prev_month, merchant: @merchant, active: true, percentage:true)
       
       expect(coupon.valid?).to be(false)
       expect(coupon.errors[:expiration_date]).to include("Coupon is past due")
@@ -147,6 +152,24 @@ describe Coupon, type: :model do
 
       expect(new_coupon.valid?).to be(false)
       expect(new_coupon.errors[:limit]).to include('Merchant cannot have more than 5 active coupons.')
+    end
+  end
+
+  describe "packaged_invoices" do
+    before(:each) do
+      @merchant = Merchant.create(name: "Test")
+      @customer = Customer.create(first_name: "John", last_name: "Hill")
+      @coupon_1 = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
+      @coupon_2 = Coupon.create(code: "SAVE20", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
+      @invoice_1 = Invoice.create(customer: @customer, merchant: @merchant, status:"returned", coupon: @coupon_1)
+      @invoice_2 = Invoice.create(customer: @customer, merchant: @merchant, status:"packaged", coupon: @coupon_2)
+    end
+    it "will return true if a coupon has a packaged invoice" do
+      expect(@coupon_2.packaged_invoices?).to be(true)
+    end
+
+    it "will return false if a coupon doesn't have packaged invoice"do
+      expect(@coupon_1.packaged_invoices?).to be(false)
     end
   end
 end

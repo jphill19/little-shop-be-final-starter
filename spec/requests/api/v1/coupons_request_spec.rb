@@ -1,43 +1,129 @@
 require "rails_helper"
 
 describe "Merchant endpoints", :type => :request do
+  before(:each) do
+    Merchant.destroy_all
+    Customer.destroy_all
+    Coupon.destroy_all
+    @merchant = Merchant.create(name: "Test")
+    @customer = Customer.create(first_name: "John", last_name: "Hill")
+    @coupon_1 = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant,  active: true,  percentage: true)
+    @coupon_2 = Coupon.create(code: "SAVE20", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant,  active: true,  percentage: true)
+    @invoice_1 = Invoice.create(customer: @customer, merchant: @merchant, status: "returned", coupon: @coupon_1)
+    @invoice_2 = Invoice.create(customer: @customer, merchant: @merchant, status: "shipped", coupon: @coupon_1)
+    @invoice_2 = Invoice.create(customer: @customer, merchant: @merchant, status: "packaged", coupon: @coupon_2)
+    
+  end
   describe "show" do
-    before(:each) do
-      @merchant = Merchant.create(name: "Test")
-      @customer = Customer.create(first_name: "John", last_name: "Hill")
-      @coupon = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant,  active: true,  percentage: true)
-      @invoice_1 = Invoice.create(customer: @customer, merchant: @merchant, status: "returned", coupon: @coupon)
-      @invoice_2 = Invoice.create(customer: @customer, merchant: @merchant, status: "shipped", coupon: @coupon)
-    end
-
     it "can handle happy paths for proper requests" do
-      get "/api/v1/coupons/#{@coupon.id}"
+      get "/api/v1/coupons/#{@coupon_1.id}"
       json = JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to have_http_status(:ok)
       expect(json[:data]).to include(:id, :type, :attributes)
-      expect(json[:data][:id]).to eq("#{@coupon.id}")
+      expect(json[:data][:id]).to eq("#{@coupon_1.id}")
       expect(json[:data][:type]).to eq("coupon")
-      expect(json[:data][:attributes][:code]).to eq(@coupon.code)
-      expect(json[:data][:attributes][:discount]).to eq(@coupon.discount)
-      expect(json[:data][:attributes][:expiration_date]).to eq(@coupon.expiration_date.to_s)
-      expect(json[:data][:attributes][:active]).to eq(@coupon.active)
-      expect(json[:data][:attributes][:percentage]).to eq(@coupon.percentage)
+      expect(json[:data][:attributes][:code]).to eq(@coupon_1.code)
+      expect(json[:data][:attributes][:discount]).to eq(@coupon_1.discount)
+      expect(json[:data][:attributes][:expiration_date]).to eq(@coupon_1.expiration_date.to_s)
+      expect(json[:data][:attributes][:active]).to eq(@coupon_1.active)
+      expect(json[:data][:attributes][:percentage]).to eq(@coupon_1.percentage)
       expect(json[:data][:attributes][:times_used]).to eq(2)
     end
 
     it "can handle sad paths for request with ids that exist" do
-      get "/api/v1/coupons/#{@coupon.id + 1}"
+      get "/api/v1/coupons/#{@coupon_2.id + 1}"
       json = JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to have_http_status(:not_found)
       expect(json).to include(:errors)
       expect(json[:errors][0][:status]).to eq(404)
-      expect(json[:errors][0][:message]).to eq("Couldn't find Coupon with 'id'=#{@coupon.id + 1}")
+      expect(json[:errors][0][:message]).to eq("Couldn't find Coupon with 'id'=#{@coupon_2.id + 1}")
     end
 
     it "can handle sad paths for request with ids that are not integers" do
       get "/api/v1/coupons/dog"
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to have_http_status(:not_found)
+      expect(json).to include(:errors)
+      expect(json[:errors][0][:status]).to eq(404)
+      expect(json[:errors][0][:message]).to eq("Couldn't find Coupon with 'id'=dog")
+    end
+  end
+
+  describe "deactivate" do
+    it "can deactivate an activated coupon" do
+      patch "/api/v1/coupons/#{@coupon_1.id}/deactivate"
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to have_http_status(:ok)
+      expect(json[:data]).to include(:id, :type, :attributes)
+      expect(json[:data][:id]).to eq("#{@coupon_1.id}")
+      expect(json[:data][:type]).to eq("coupon")
+      expect(json[:data][:attributes][:code]).to eq(@coupon_1.code)
+      expect(json[:data][:attributes][:discount]).to eq(@coupon_1.discount)
+      expect(json[:data][:attributes][:expiration_date]).to eq(@coupon_1.expiration_date.to_s)
+      expect(json[:data][:attributes][:active]).to eq(false)
+      expect(json[:data][:attributes][:percentage]).to eq(@coupon_1.percentage)
+    end
+
+    it "can't deactivate a coupon for an invoice that is packaged" do
+      patch "/api/v1/coupons/#{@coupon_2.id}/deactivate"
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json).to include(:errors)
+      expect(json[:errors][0][:status]).to eq(422)
+      expect(json[:errors][0][:message]).to eq("Cannot Process Request. Coupon is attached to a packaged Invoice")
+    end
+
+    it "can handle sad paths where the id doesn't exsist" do
+      patch "/api/v1/coupons/dog/deactivate"
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to have_http_status(:not_found)
+      expect(json).to include(:errors)
+      expect(json[:errors][0][:status]).to eq(404)
+      expect(json[:errors][0][:message]).to eq("Couldn't find Coupon with 'id'=dog")
+    end
+  end
+
+  describe "activate" do
+    it "can activate a coupon" do
+      deactivate_coupon = Coupon.create(code: "BIGDEAL10", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant,  active: false,  percentage: true)
+      patch "/api/v1/coupons/#{deactivate_coupon.id}/activate"
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to have_http_status(:ok)
+      expect(json[:data]).to include(:id, :type, :attributes)
+      expect(json[:data][:id]).to eq("#{deactivate_coupon.id}")
+      expect(json[:data][:type]).to eq("coupon")
+      expect(json[:data][:attributes][:code]).to eq(deactivate_coupon.code)
+      expect(json[:data][:attributes][:discount]).to eq(deactivate_coupon.discount)
+      expect(json[:data][:attributes][:expiration_date]).to eq(deactivate_coupon.expiration_date.to_s)
+      expect(json[:data][:attributes][:active]).to eq(true)
+      expect(json[:data][:attributes][:percentage]).to eq(deactivate_coupon.percentage)
+    end
+
+    it "can activate a coupon if it exceeds the limit of 5 coupons active per merchant" do
+      coupon_3 = Coupon.create(code: "SAVE30", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant,  active: true,  percentage: true)
+      coupon_4 = Coupon.create(code: "SAVE40", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant,  active: true,  percentage: true)
+      coupon_5 = Coupon.create(code: "SAVE50", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant,  active: true,  percentage: true)
+
+      deactivate_coupon = Coupon.create(code: "BIGDEAL10", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant,  active: false,  percentage: true)
+      patch "/api/v1/coupons/#{deactivate_coupon.id}/activate"
+      json = JSON.parse(response.body, symbolize_names: true)
+
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json).to include(:errors)
+      expect(json[:errors][0][:status]).to eq(422)
+      expect(json[:errors][0][:message]).to eq("Limit Merchant cannot have more than 5 active coupons.")
+    end
+
+    it "can handle sad paths where the id doesn't exsist" do
+      patch "/api/v1/coupons/dog/activate"
       json = JSON.parse(response.body, symbolize_names: true)
 
       expect(response).to have_http_status(:not_found)
