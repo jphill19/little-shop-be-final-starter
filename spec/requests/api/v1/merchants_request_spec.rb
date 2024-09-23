@@ -75,6 +75,36 @@ describe "Merchant endpoints", :type => :request do
       expect(json[:data][1][:attributes][:item_count]).to eq(2)
       expect(json[:data][2][:attributes][:item_count]).to eq(7)
     end
+
+    it "returns counts of coupons & invoices with coupons" do
+      merchant = Merchant.create(name: "Test")
+      merchant_2 = Merchant.create(name: "Test 2")
+      customer = Customer.create(first_name: "John", last_name: "Hill")
+      coupon_1 = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.tomorrow, merchant: merchant, active: true, percentage: true)
+      coupon_2 = Coupon.create(code: "SAVE20", discount: 10, expiration_date: Date.tomorrow, merchant: merchant, active: true, percentage: true)
+      coupon_3 = Coupon.create(code: "SAVE30", discount: 10, expiration_date: Date.tomorrow, merchant: merchant, active: true, percentage: true)
+      invoice_1 = Invoice.create(customer: customer, merchant: merchant, status:"returned", coupon: coupon_1)
+      invoice_2 = Invoice.create(customer: customer, merchant: merchant, status:"packaged", coupon: coupon_2)
+      invoice_3 = Invoice.create(customer: customer, merchant: merchant, status:"packaged")
+
+      get "/api/v1/merchants"
+      json = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to have_http_status(:ok)
+      expect(json[:data].count).to eq(2)
+      expect(json[:data].first).to include(:id, :type, :attributes)
+      expect(json[:data].first[:attributes]).to include(:name, :coupons_count, :invoice_coupon_count)
+      expect(json[:data].first[:attributes][:name]).to eq(merchant.name)
+      expect(json[:data].first[:attributes][:coupons_count]).to eq(3)
+      expect(json[:data].first[:attributes][:invoice_coupon_count]).to eq(2)
+
+      expect(json[:data][1]).to include(:id, :type, :attributes)
+      expect(json[:data][1][:attributes]).to include(:name, :coupons_count, :invoice_coupon_count)
+      expect(json[:data][1][:attributes][:name]).to eq(merchant_2.name)
+      expect(json[:data][1][:attributes][:coupons_count]).to eq(0)
+      expect(json[:data][1][:attributes][:invoice_coupon_count]).to eq(0)
+
+    end
   end
 
   describe "get a merchant by id" do
