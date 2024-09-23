@@ -94,4 +94,31 @@ describe Merchant, type: :model do
       expect(other_merchant.invoices_filtered_by_status("packaged")).to eq([inv_4_packaged])
     end
   end
+
+
+  describe "count" do
+    before(:each) do
+      @merchant = Merchant.create(name: "Test")
+      @customer = Customer.create(first_name: "John", last_name: "Hill")
+      @coupon_1 = Coupon.create(code: "SAVE10", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
+      @coupon_2 = Coupon.create(code: "SAVE20", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
+      @coupon_3 = Coupon.create(code: "SAVE30", discount: 10, expiration_date: Date.tomorrow, merchant: @merchant, active: true, percentage: true)
+      @invoice_1 = Invoice.create(customer: @customer, merchant: @merchant, status:"returned", coupon: @coupon_1)
+      @invoice_2 = Invoice.create(customer: @customer, merchant: @merchant, status:"packaged", coupon: @coupon_2)
+      @invoice_3 = Invoice.create(customer: @customer, merchant: @merchant, status:"packaged")
+    end
+    describe "coupons_count" do
+      it "can retrun count of all the coupons that belong to a merchant" do
+        count = @merchant.coupons_count
+        expect(count).to eq(3)
+      end
+    end
+
+    describe "invoice_coupons_count" do
+      it "can return count of all the invoices that have merchant coupons applied to them" do
+        count = @merchant.invoice_coupons_count
+        expect(count).to eq(2)
+      end
+    end
+  end
 end
