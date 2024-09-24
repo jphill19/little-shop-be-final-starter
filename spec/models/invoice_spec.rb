@@ -25,7 +25,7 @@ RSpec.describe Invoice do
       expect(invoice.valid?).to be true
     end
     
-    it "can create Invoices where coupons & items do not belong to a Merchant" do
+    it "can't create Invoices where coupons & items do not belong to a Merchant" do
       merchant_1 = Merchant.create!(name: "Test")
       merchant_2 = Merchant.create!(name: "Test")
 

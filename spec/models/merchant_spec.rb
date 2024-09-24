@@ -106,6 +106,8 @@ describe Merchant, type: :model do
       @invoice_1 = Invoice.create(customer: @customer, merchant: @merchant, status:"returned", coupon: @coupon_1)
       @invoice_2 = Invoice.create(customer: @customer, merchant: @merchant, status:"packaged", coupon: @coupon_2)
       @invoice_3 = Invoice.create(customer: @customer, merchant: @merchant, status:"packaged")
+      @invoice_4 = Invoice.create(customer: @customer, merchant: @merchant, status:"packaged", coupon: @coupon_2)
+      @invoice_5 = Invoice.create(customer: @customer, merchant: @merchant, status:"packaged", coupon: @coupon_2)
     end
     describe "coupons_count" do
       it "can retrun count of all the coupons that belong to a merchant" do
@@ -117,7 +119,7 @@ describe Merchant, type: :model do
     describe "invoice_coupons_count" do
       it "can return count of all the invoices that have merchant coupons applied to them" do
         count = @merchant.invoice_coupons_count
-        expect(count).to eq(2)
+        expect(count).to eq(4)
       end
     end
   end
